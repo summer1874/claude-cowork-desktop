@@ -12,6 +12,7 @@
 - 前端只通过 typed API 调用系统能力
 - 业务规则优先放 Rust core
 - 所有文件与命令执行操作写审计日志
+- 方向性变更先记录到 docs（遵循 `docs/change-policy.md`）
 
 ## 领域模块（首批）
 

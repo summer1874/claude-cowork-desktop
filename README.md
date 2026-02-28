@@ -16,3 +16,4 @@ Tauri 2 + Rust + React/TypeScript 的跨平台桌面协作工作台（Win/macOS�
 1. UI 不直接访问系统能力，统一走 Tauri command。
 2. 业务规则尽量在 Rust Core，前端只做展示/交互。
 3. 所有关键 I/O 操作可审计（日志）。
+4. 所有方向性改动必须先记录到 docs（见 `docs/change-policy.md`）。

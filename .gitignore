@@ -16,3 +16,8 @@ src-tauri/target/
 # OS
 .DS_Store
 Thumbs.db
+
+# TS build metadata
+*.tsbuildinfo
+apps/desktop/vite.config.js
+apps/desktop/vite.config.d.ts
