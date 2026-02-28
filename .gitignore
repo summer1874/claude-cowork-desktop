@@ -1,0 +1,18 @@
+# Node
+node_modules/
+.pnpm-store/
+
+# Frontend build
+apps/desktop/dist/
+apps/desktop/.vite/
+
+# Rust
+**/target/
+Cargo.lock
+
+# Tauri
+src-tauri/target/
+
+# OS
+.DS_Store
+Thumbs.db

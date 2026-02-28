@@ -1,0 +1,8 @@
+[package]
+name = "cowork-infra"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cowork-core = { path = "../core" }
+tracing = "0.1"
