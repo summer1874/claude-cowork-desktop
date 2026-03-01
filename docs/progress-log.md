@@ -76,3 +76,8 @@
 - 新增会话级配置存储 `sessions/config.ts`（baseUrl/modelName/apiKey）。
 - 新增“测试连接”按钮，调用真实 llm_chat ping 路径。
 - 错误提示增强：401/超时/连接失败映射为友好文案。
+
+### 会话筛选与公司网关预留配置增强
+- Session 面板新增按任务筛选会话（task filter）。
+- company_gateway 新增预留配置输入项：path/authType/extraHeadersText。
+- 会话级配置持久化扩展，保存上述预留字段。

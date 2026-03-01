@@ -3,6 +3,9 @@ export type SessionConfig = {
   baseUrl?: string;
   modelName?: string;
   apiKey?: string;
+  path?: string;
+  authType?: string;
+  extraHeadersText?: string;
 };
 
 const KEY = 'cowork_session_configs_v1';

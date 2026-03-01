@@ -33,10 +33,17 @@ export default function SessionPanel() {
 
   const [title, setTitle] = useState('');
   const [taskId, setTaskId] = useState('');
+  const [taskFilter, setTaskFilter] = useState('all');
   const [model, setModel] = useState('openai_compatible');
   const [baseUrl, setBaseUrl] = useState('');
   const [modelName, setModelName] = useState('');
   const [apiKey, setApiKey] = useState('');
+
+  // company_gateway 预留配置
+  const [path, setPath] = useState('/v1/chat/completions');
+  const [authType, setAuthType] = useState('bearer');
+  const [extraHeadersText, setExtraHeadersText] = useState('');
+
   const [input, setInput] = useState('');
 
   useEffect(() => {
@@ -52,12 +59,19 @@ export default function SessionPanel() {
     setBaseUrl(cfg.baseUrl || '');
     setModelName(cfg.modelName || '');
     setApiKey(cfg.apiKey || '');
+    setPath(cfg.path || '/v1/chat/completions');
+    setAuthType(cfg.authType || 'bearer');
+    setExtraHeadersText(cfg.extraHeadersText || '');
   }, [activeSessionId]);
 
-  const scopedSessions = useMemo(
-    () => (workspaceId ? sessions.filter((s) => s.workspaceId === workspaceId) : []),
-    [sessions, workspaceId]
-  );
+  const scopedSessions = useMemo(() => {
+    if (!workspaceId) return [];
+    let arr = sessions.filter((s) => s.workspaceId === workspaceId);
+    if (taskFilter !== 'all') {
+      arr = arr.filter((s) => (s.taskId || '') === taskFilter);
+    }
+    return arr;
+  }, [sessions, workspaceId, taskFilter]);
 
   const activeSession = useMemo(
     () => scopedSessions.find((s) => s.id === activeSessionId) || null,
@@ -75,6 +89,9 @@ export default function SessionPanel() {
       baseUrl,
       modelName,
       apiKey,
+      path,
+      authType,
+      extraHeadersText,
     });
   };
 
@@ -85,7 +102,7 @@ export default function SessionPanel() {
       id: `sess_${Date.now()}`,
       workspaceId,
       taskId: taskId || undefined,
-      title: title.trim() || `Session ${scopedSessions.length + 1}`,
+      title: title.trim() || `Session ${sessions.filter((x) => x.workspaceId === workspaceId).length + 1}`,
       model,
       createdAt: now,
       updatedAt: now,
@@ -247,9 +264,28 @@ export default function SessionPanel() {
           </select>
           <button onClick={createSession} disabled={!workspaceId}>新建会话</button>
         </div>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <select value={taskFilter} onChange={(e) => setTaskFilter(e.target.value)} style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }}>
+            <option value="all">全部任务会话</option>
+            {tasks.filter((t) => t.workspaceId === workspaceId).map((t) => (
+              <option key={t.id} value={t.id}>{t.title}</option>
+            ))}
+          </select>
+        </div>
+
         <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="Base URL（可选，默认按 provider）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
         <input value={modelName} onChange={(e) => setModelName(e.target.value)} placeholder="Model（可选，如 gpt-4o-mini / qwen2.5:latest）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
-        <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="API Key（openai_compatible 时可填）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
+        <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="API Key（openai_compatible/company_gateway 可填）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
+
+        {model === 'company_gateway' && (
+          <div style={{ display: 'grid', gap: 8, border: '1px dashed #334155', borderRadius: 8, padding: 10 }}>
+            <div style={{ color: '#94a3b8', fontSize: 12 }}>Company Gateway 预留配置（暂不实现请求映射）</div>
+            <input value={path} onChange={(e) => setPath(e.target.value)} placeholder="Path（如 /v1/chat/completions）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
+            <input value={authType} onChange={(e) => setAuthType(e.target.value)} placeholder="Auth Type（bearer/api_key/custom）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
+            <textarea value={extraHeadersText} onChange={(e) => setExtraHeadersText(e.target.value)} placeholder="Extra Headers（JSON 文本，预留）" rows={3} style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
