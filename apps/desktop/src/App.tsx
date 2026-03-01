@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import RunLogPanel from './components/RunLogPanel';
+import SessionPanel from './components/SessionPanel';
 import TaskBoard from './components/TaskBoard';
 import ToolPanel from './components/ToolPanel';
 import WorkspacePanel from './components/WorkspacePanel';
@@ -57,6 +58,7 @@ export default function App() {
 
       <WorkspacePanel />
       <TaskBoard />
+      <SessionPanel />
       <ToolPanel />
       <RunLogPanel />
     </main>

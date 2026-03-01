@@ -58,3 +58,9 @@
 - 新增任务本地持久化与状态流转。
 - 任务按 active workspace 过滤展示。
 - 任务创建/状态更新动作写入 run log。
+
+### Session 模块（前端 v0）
+- 新增 `SessionPanel`，支持多会话标签切换。
+- 支持会话绑定任务与模型字段。
+- 消息持久化（localStorage）与 stub assistant 回复。
+- 会话创建/消息发送动作写入 run log。

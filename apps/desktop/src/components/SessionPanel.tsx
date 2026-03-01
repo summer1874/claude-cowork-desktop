@@ -1,0 +1,193 @@
+import { useEffect, useMemo, useState } from 'react';
+import { appendRunLog } from '../logs/runlog';
+import { useSessionStore } from '../sessions/store';
+import { addMessage, loadMessages, loadSessions, upsertSession } from '../sessions/storage';
+import type { MessageItem, SessionItem } from '../sessions/types';
+import { useTaskStore } from '../tasks/store';
+import { useToolStore } from '../stores/toolStore';
+import { useWorkspaceStore } from '../workspace/store';
+
+export default function SessionPanel() {
+  const { activeId: workspaceId } = useWorkspaceStore();
+  const { tasks } = useTaskStore();
+  const { setRunLogs } = useToolStore();
+
+  const {
+    sessions,
+    messages,
+    activeSessionId,
+    setSessions,
+    setMessages,
+    setActiveSessionId,
+  } = useSessionStore();
+
+  const [title, setTitle] = useState('');
+  const [taskId, setTaskId] = useState('');
+  const [model, setModel] = useState('openai_compatible');
+  const [input, setInput] = useState('');
+
+  useEffect(() => {
+    setSessions(loadSessions());
+    setMessages(loadMessages());
+  }, [setSessions, setMessages]);
+
+  const scopedSessions = useMemo(
+    () => (workspaceId ? sessions.filter((s) => s.workspaceId === workspaceId) : []),
+    [sessions, workspaceId]
+  );
+
+  const activeSession = useMemo(
+    () => scopedSessions.find((s) => s.id === activeSessionId) || null,
+    [scopedSessions, activeSessionId]
+  );
+
+  const activeMessages = useMemo(
+    () => (activeSessionId ? messages.filter((m) => m.sessionId === activeSessionId) : []),
+    [messages, activeSessionId]
+  );
+
+  const createSession = () => {
+    if (!workspaceId) return;
+    const now = new Date().toISOString();
+    const s: SessionItem = {
+      id: `sess_${Date.now()}`,
+      workspaceId,
+      taskId: taskId || undefined,
+      title: title.trim() || `Session ${scopedSessions.length + 1}`,
+      model,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const next = upsertSession(s);
+    setSessions(next);
+    setActiveSessionId(s.id);
+    setTitle('');
+    setTaskId('');
+
+    setRunLogs(
+      appendRunLog({
+        id: `log_${Date.now()}`,
+        at: now,
+        action: 'session_create',
+        input: { title: s.title, taskId: s.taskId, model: s.model },
+        output: { sessionId: s.id },
+        status: 'ok',
+        durationMs: 1,
+      })
+    );
+  };
+
+  const sendMessage = () => {
+    if (!activeSessionId) return;
+    if (!input.trim()) return;
+    const now = new Date().toISOString();
+
+    const userMsg: MessageItem = {
+      id: `msg_${Date.now()}`,
+      sessionId: activeSessionId,
+      role: 'user',
+      content: input.trim(),
+      createdAt: now,
+    };
+
+    const assistantMsg: MessageItem = {
+      id: `msg_${Date.now() + 1}`,
+      sessionId: activeSessionId,
+      role: 'assistant',
+      content: `（stub）已收到：${input.trim()}`,
+      createdAt: now,
+    };
+
+    let next = addMessage(userMsg);
+    next = addMessage(assistantMsg);
+    setMessages(next);
+    setInput('');
+
+    setRunLogs(
+      appendRunLog({
+        id: `log_${Date.now()}`,
+        at: now,
+        action: 'session_send_message',
+        input: { sessionId: activeSessionId, text: userMsg.content },
+        output: { ok: true },
+        status: 'ok',
+        durationMs: 1,
+      })
+    );
+  };
+
+  return (
+    <section style={{ marginTop: 20, border: '1px solid #334155', borderRadius: 10, padding: 14 }}>
+      <h3 style={{ marginTop: 0 }}>Session 协作区（v0）</h3>
+      <p style={{ color: '#64748b', marginTop: 0 }}>多会话 tab + 消息持久化 + 任务绑定（stub 回复）。</p>
+
+      {!workspaceId && <div style={{ color: '#f59e0b' }}>请先激活 workspace。</div>}
+
+      <div style={{ display: 'grid', gap: 8, marginBottom: 10 }}>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="会话标题（可选）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <select value={taskId} onChange={(e) => setTaskId(e.target.value)} style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }}>
+            <option value="">不绑定任务</option>
+            {tasks.filter((t) => t.workspaceId === workspaceId).map((t) => (
+              <option key={t.id} value={t.id}>{t.title}</option>
+            ))}
+          </select>
+          <select value={model} onChange={(e) => setModel(e.target.value)} style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }}>
+            <option value="openai_compatible">openai_compatible</option>
+            <option value="ollama">ollama</option>
+            <option value="company_gateway">company_gateway</option>
+          </select>
+          <button onClick={createSession} disabled={!workspaceId}>新建会话</button>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+        {scopedSessions.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setActiveSessionId(s.id)}
+            style={{
+              padding: '8px 10px',
+              borderRadius: 8,
+              border: '1px solid #334155',
+              background: activeSessionId === s.id ? '#1d4ed8' : '#0f172a',
+              color: '#e2e8f0',
+            }}
+          >
+            {s.title}
+          </button>
+        ))}
+      </div>
+
+      {activeSession ? (
+        <>
+          <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 8 }}>
+            当前会话：{activeSession.title} | model: {activeSession.model} | task: {activeSession.taskId || '无'}
+          </div>
+
+          <div style={{ border: '1px solid #1e293b', borderRadius: 8, padding: 10, minHeight: 120, maxHeight: 260, overflow: 'auto', marginBottom: 8 }}>
+            {activeMessages.map((m) => (
+              <div key={m.id} style={{ marginBottom: 8 }}>
+                <strong style={{ color: m.role === 'user' ? '#38bdf8' : '#22c55e' }}>{m.role}:</strong>{' '}
+                <span>{m.content}</span>
+              </div>
+            ))}
+            {activeMessages.length === 0 && <div style={{ color: '#64748b' }}>暂无消息</div>}
+          </div>
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="输入消息..."
+              style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #475569' }}
+            />
+            <button onClick={sendMessage}>发送</button>
+          </div>
+        </>
+      ) : (
+        <div style={{ color: '#64748b' }}>请选择或创建一个会话</div>
+      )}
+    </section>
+  );
+}
