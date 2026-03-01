@@ -16,3 +16,9 @@
   - `tsconfig.node.json`
   - `vite.config.ts`
 - 验证 TypeScript 构建链（使用 npm 代替 pnpm，执行 `tsc -b` 通过）。
+
+### 下一步推进（Tauri 通路）
+- 新增 `src-tauri` 基础配置：`Cargo.toml`、`tauri.conf.json`、`build.rs`。
+- 新增 Rust command：`app_health`（用于前后端通路验证）。
+- 前端新增 `services/tauri.ts`，并在 `App.tsx` 加入 Health 检查按钮。
+- 说明：纯 Web 调试时返回 fallback（`web-dev`），Tauri 环境走真实 invoke。

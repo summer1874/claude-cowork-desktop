@@ -20,3 +20,9 @@
 - chat-session：多会话协作
 - task-board：任务流转
 - runlog：命令执行日志
+
+
+## 当前通路基线
+
+- 已建立最小 Bridge 验证命令：`app_health`
+- 前端通过 `services/tauri.ts` 统一调用，避免业务层直接散落 invoke
