@@ -42,3 +42,8 @@
 - 新增 `apps/desktop/src/components/ToolPanel.tsx`。
 - 新增 `apps/desktop/src/services/tools.ts` 与 `stores/toolStore.ts`。
 - 前端可设置 workspace root、切换 readonly/readwrite、执行 list/read/write 测试。
+
+### Run Log 持久化（前端）
+- 新增 `apps/desktop/src/logs/runlog.ts`（localStorage 持久化，最多 500 条）。
+- 新增 `RunLogPanel` 展示最近工具调用审计记录。
+- ToolPanel 每次执行工具调用都会写入 run log（含 action/status/duration/error）。

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   fsList,
   fsRead,
@@ -7,6 +7,7 @@ import {
   setWorkspaceRoot,
   type FsMode,
 } from '../services/tools';
+import { appendRunLog, loadRunLogs } from '../logs/runlog';
 import { useToolStore } from '../stores/toolStore';
 
 export default function ToolPanel() {
@@ -23,16 +24,41 @@ export default function ToolPanel() {
     setSelectedPath,
     setFileContent,
     setOutput,
+    setRunLogs,
   } = useToolStore();
 
   const [busy, setBusy] = useState(false);
 
-  const run = async (fn: () => Promise<void>) => {
+  useEffect(() => {
+    setRunLogs(loadRunLogs());
+  }, [setRunLogs]);
+
+  const run = async (action: string, input: Record<string, unknown>, fn: () => Promise<unknown>) => {
     setBusy(true);
+    const t0 = Date.now();
     try {
-      await fn();
+      const output = await fn();
+      setRunLogs(appendRunLog({
+        id: `log_${Date.now()}`,
+        at: new Date().toISOString(),
+        action,
+        input,
+        output,
+        status: 'ok',
+        durationMs: Date.now() - t0,
+      }));
     } catch (e) {
-      setOutput(String(e));
+      const err = String(e);
+      setOutput(err);
+      setRunLogs(appendRunLog({
+        id: `log_${Date.now()}`,
+        at: new Date().toISOString(),
+        action,
+        input,
+        status: 'error',
+        error: err,
+        durationMs: Date.now() - t0,
+      }));
     } finally {
       setBusy(false);
     }
@@ -51,13 +77,13 @@ export default function ToolPanel() {
           style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }}
         />
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button onClick={() => run(async () => { await setWorkspaceRoot(workspaceRoot); setOutput('workspace root 已设置'); })} disabled={busy}>设置 Root</button>
-          <button onClick={() => run(async () => { const m: FsMode = mode === 'read_only' ? 'read_write' : 'read_only'; await setFsMode(m); setMode(m); setOutput(`mode => ${m}`); })} disabled={busy}>
+          <button onClick={() => run('fs_set_workspace_root', { root: workspaceRoot }, async () => { await setWorkspaceRoot(workspaceRoot); setOutput('workspace root 已设置'); return 'ok'; })} disabled={busy}>设置 Root</button>
+          <button onClick={() => run('fs_set_mode', { current: mode }, async () => { const m: FsMode = mode === 'read_only' ? 'read_write' : 'read_only'; await setFsMode(m); setMode(m); setOutput(`mode => ${m}`); return m; })} disabled={busy}>
             切换模式（当前: {mode}）
           </button>
-          <button onClick={() => run(async () => { const items = await fsList('.'); setList(items); setOutput(`list ok: ${items.length} items`); })} disabled={busy}>列目录</button>
-          <button onClick={() => run(async () => { const text = await fsRead(selectedPath); setFileContent(text); setOutput(`read ok: ${selectedPath}`); })} disabled={busy}>读文件</button>
-          <button onClick={() => run(async () => { await fsWrite(selectedPath, fileContent); setOutput(`write ok: ${selectedPath}`); })} disabled={busy}>写文件</button>
+          <button onClick={() => run('fs_list', { relPath: '.' }, async () => { const items = await fsList('.'); setList(items); setOutput(`list ok: ${items.length} items`); return items.length; })} disabled={busy}>列目录</button>
+          <button onClick={() => run('fs_read', { relPath: selectedPath }, async () => { const text = await fsRead(selectedPath); setFileContent(text); setOutput(`read ok: ${selectedPath}`); return text.slice(0, 80); })} disabled={busy}>读文件</button>
+          <button onClick={() => run('fs_write', { relPath: selectedPath }, async () => { await fsWrite(selectedPath, fileContent); setOutput(`write ok: ${selectedPath}`); return 'ok'; })} disabled={busy}>写文件</button>
         </div>
 
         <input

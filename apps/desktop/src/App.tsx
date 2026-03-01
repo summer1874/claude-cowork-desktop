@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import RunLogPanel from './components/RunLogPanel';
 import ToolPanel from './components/ToolPanel';
 import { getAppHealth, type AppHealth } from './services/tauri';
 
@@ -53,6 +54,7 @@ export default function App() {
       )}
 
       <ToolPanel />
+      <RunLogPanel />
     </main>
   );
 }

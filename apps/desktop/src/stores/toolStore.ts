@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { FsMode, FsListItem } from '../services/tools';
+import type { RunLogEntry } from '../logs/runlog';
 
 type ToolState = {
   workspaceRoot: string;
@@ -8,12 +9,14 @@ type ToolState = {
   selectedPath: string;
   fileContent: string;
   output: string;
+  runLogs: RunLogEntry[];
   setWorkspaceRoot: (v: string) => void;
   setMode: (v: FsMode) => void;
   setList: (v: FsListItem[]) => void;
   setSelectedPath: (v: string) => void;
   setFileContent: (v: string) => void;
   setOutput: (v: string) => void;
+  setRunLogs: (v: RunLogEntry[]) => void;
 };
 
 export const useToolStore = create<ToolState>((set) => ({
@@ -23,10 +26,12 @@ export const useToolStore = create<ToolState>((set) => ({
   selectedPath: 'README.md',
   fileContent: '',
   output: '',
+  runLogs: [],
   setWorkspaceRoot: (workspaceRoot) => set({ workspaceRoot }),
   setMode: (mode) => set({ mode }),
   setList: (list) => set({ list }),
   setSelectedPath: (selectedPath) => set({ selectedPath }),
   setFileContent: (fileContent) => set({ fileContent }),
   setOutput: (output) => set({ output }),
+  setRunLogs: (runLogs) => set({ runLogs }),
 }));
