@@ -28,3 +28,17 @@
   "traceId": "..."
 }
 ```
+
+
+## LLM 接口（新增）
+
+- `llm_set_provider_config`
+- `llm_test_connection`
+- `llm_list_models`
+- `llm_chat`
+
+### Provider 类型
+
+- `openai_compatible`
+- `ollama`
+- `company_gateway`

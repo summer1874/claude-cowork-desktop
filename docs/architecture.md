@@ -26,3 +26,10 @@
 
 - 已建立最小 Bridge 验证命令：`app_health`
 - 前端通过 `services/tauri.ts` 统一调用，避免业务层直接散落 invoke
+
+
+## LLM Provider Layer（新增）
+
+- Rust 侧引入 Provider 抽象层，屏蔽不同模型厂商差异。
+- 首期支持：OpenAI-compatible / Ollama / Company Gateway。
+- 前端仅调用统一 command，不直接耦合第三方 API。

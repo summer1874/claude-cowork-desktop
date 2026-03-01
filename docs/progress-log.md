@@ -22,3 +22,8 @@
 - 新增 Rust command：`app_health`（用于前后端通路验证）。
 - 前端新增 `services/tauri.ts`，并在 `App.tsx` 加入 Health 检查按钮。
 - 说明：纯 Web 调试时返回 fallback（`web-dev`），Tauri 环境走真实 invoke。
+
+### LLM 接入规划推进
+- 新增 `docs/llm-integration-plan.md`，明确三类 Provider 接入策略。
+- 将 Company Gateway（公司后端）设为首期支持目标之一。
+- 更新 `api-contract.md` 与 `architecture.md` 的 LLM 接口与分层约束。
