@@ -2,11 +2,20 @@ import { useEffect, useMemo, useState } from 'react';
 import { appendRunLog } from '../logs/runlog';
 import { llmChat } from '../services/llm';
 import { useSessionStore } from '../sessions/store';
+import { getSessionConfig, loadSessionConfigs, upsertSessionConfig } from '../sessions/config';
 import { addMessage, loadMessages, loadSessions, upsertSession } from '../sessions/storage';
 import type { MessageItem, SessionItem } from '../sessions/types';
 import { useTaskStore } from '../tasks/store';
 import { useToolStore } from '../stores/toolStore';
 import { useWorkspaceStore } from '../workspace/store';
+
+function friendlyErr(e: unknown) {
+  const text = String(e || 'unknown error');
+  if (text.includes('401') || text.toLowerCase().includes('unauthorized')) return '鉴权失败（401），请检查 API Key';
+  if (text.toLowerCase().includes('timed out') || text.toLowerCase().includes('timeout')) return '请求超时，请检查网络或后端可用性';
+  if (text.toLowerCase().includes('failed to fetch') || text.toLowerCase().includes('connection')) return '连接失败，请检查 Base URL 与服务状态';
+  return text;
+}
 
 export default function SessionPanel() {
   const { activeId: workspaceId } = useWorkspaceStore();
@@ -33,7 +42,17 @@ export default function SessionPanel() {
   useEffect(() => {
     setSessions(loadSessions());
     setMessages(loadMessages());
+    loadSessionConfigs();
   }, [setSessions, setMessages]);
+
+  useEffect(() => {
+    if (!activeSessionId) return;
+    const cfg = getSessionConfig(activeSessionId);
+    if (!cfg) return;
+    setBaseUrl(cfg.baseUrl || '');
+    setModelName(cfg.modelName || '');
+    setApiKey(cfg.apiKey || '');
+  }, [activeSessionId]);
 
   const scopedSessions = useMemo(
     () => (workspaceId ? sessions.filter((s) => s.workspaceId === workspaceId) : []),
@@ -49,6 +68,15 @@ export default function SessionPanel() {
     () => (activeSessionId ? messages.filter((m) => m.sessionId === activeSessionId) : []),
     [messages, activeSessionId]
   );
+
+  const persistCfg = (sessionId: string) => {
+    upsertSessionConfig({
+      sessionId,
+      baseUrl,
+      modelName,
+      apiKey,
+    });
+  };
 
   const createSession = () => {
     if (!workspaceId) return;
@@ -67,6 +95,7 @@ export default function SessionPanel() {
     setActiveSessionId(s.id);
     setTitle('');
     setTaskId('');
+    persistCfg(s.id);
 
     setRunLogs(
       appendRunLog({
@@ -79,6 +108,43 @@ export default function SessionPanel() {
         durationMs: 1,
       })
     );
+  };
+
+  const testConnection = async () => {
+    if (!activeSessionId) return;
+    const t0 = Date.now();
+    try {
+      const resp = await llmChat({
+        modelType: model,
+        prompt: 'ping',
+        baseUrl,
+        modelName,
+        apiKey,
+      });
+      setRunLogs(
+        appendRunLog({
+          id: `log_${Date.now()}`,
+          at: new Date().toISOString(),
+          action: 'llm_test_connection',
+          input: { model, baseUrl, modelName },
+          output: { provider: resp.provider },
+          status: 'ok',
+          durationMs: Date.now() - t0,
+        })
+      );
+    } catch (e) {
+      setRunLogs(
+        appendRunLog({
+          id: `log_${Date.now()}`,
+          at: new Date().toISOString(),
+          action: 'llm_test_connection',
+          input: { model, baseUrl, modelName },
+          status: 'error',
+          error: friendlyErr(e),
+          durationMs: Date.now() - t0,
+        })
+      );
+    }
   };
 
   const sendMessage = async () => {
@@ -99,6 +165,7 @@ export default function SessionPanel() {
     setMessages(next);
     const prompt = input.trim();
     setInput('');
+    persistCfg(activeSessionId);
 
     try {
       const resp = await llmChat({
@@ -132,7 +199,7 @@ export default function SessionPanel() {
         })
       );
     } catch (e) {
-      const errText = String(e);
+      const errText = friendlyErr(e);
       const assistantMsg: MessageItem = {
         id: `msg_${Date.now() + 1}`,
         sessionId: activeSessionId,
@@ -160,7 +227,7 @@ export default function SessionPanel() {
   return (
     <section style={{ marginTop: 20, border: '1px solid #334155', borderRadius: 10, padding: 14 }}>
       <h3 style={{ marginTop: 0 }}>Session 协作区（v0）</h3>
-      <p style={{ color: '#64748b', marginTop: 0 }}>多会话 tab + 消息持久化 + 任务绑定（stub 回复）。</p>
+      <p style={{ color: '#64748b', marginTop: 0 }}>多会话 tab + 消息持久化 + 任务绑定（真实 llm_chat）。</p>
 
       {!workspaceId && <div style={{ color: '#f59e0b' }}>请先激活 workspace。</div>}
 
@@ -226,6 +293,7 @@ export default function SessionPanel() {
               placeholder="输入消息..."
               style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid #475569' }}
             />
+            <button onClick={testConnection}>测试连接</button>
             <button onClick={sendMessage}>发送</button>
           </div>
         </>

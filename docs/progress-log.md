@@ -71,3 +71,8 @@
 - 支持在 UI 输入 base_url / model / api_key（本地调试用途）。
 - Rust 侧为 openai_compatible 与 ollama provider 增加 HTTP blocking 请求实现。
 - company_gateway 继续保留预留实现。
+
+### Session 配置与连接测试增强
+- 新增会话级配置存储 `sessions/config.ts`（baseUrl/modelName/apiKey）。
+- 新增“测试连接”按钮，调用真实 llm_chat ping 路径。
+- 错误提示增强：401/超时/连接失败映射为友好文案。
