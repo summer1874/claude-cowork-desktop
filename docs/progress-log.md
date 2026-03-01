@@ -47,3 +47,8 @@
 - 新增 `apps/desktop/src/logs/runlog.ts`（localStorage 持久化，最多 500 条）。
 - 新增 `RunLogPanel` 展示最近工具调用审计记录。
 - ToolPanel 每次执行工具调用都会写入 run log（含 action/status/duration/error）。
+
+### Workspace 模块（前端 v0）
+- 新增 `WorkspacePanel`，支持新增/激活 workspace。
+- 新增 workspace 本地持久化（最近 20 项）。
+- 激活 workspace 时联动调用 `fs_set_workspace_root`，并写入 run log。
