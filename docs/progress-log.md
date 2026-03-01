@@ -37,3 +37,8 @@
   - `fs_list` / `fs_read` / `fs_stat`
   - `fs_write`（仅 readwrite 模式允许）
 - 强制 workspace 边界校验，拒绝越界路径访问。
+
+### Tool Runtime 前端控制面板
+- 新增 `apps/desktop/src/components/ToolPanel.tsx`。
+- 新增 `apps/desktop/src/services/tools.ts` 与 `stores/toolStore.ts`。
+- 前端可设置 workspace root、切换 readonly/readwrite、执行 list/read/write 测试。

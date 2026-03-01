@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ToolPanel from './components/ToolPanel';
 import { getAppHealth, type AppHealth } from './services/tauri';
 
 export default function App() {
@@ -18,7 +19,7 @@ export default function App() {
   return (
     <main style={{ padding: 24, fontFamily: 'Inter, system-ui, sans-serif' }}>
       <h1>ClaudeCoWork Desktop</h1>
-      <p>Sprint 1 起步：Tauri command 通路验证。</p>
+      <p>Sprint 1 起步：Tauri command 通路验证 + Tool Runtime 面板。</p>
 
       <button
         onClick={checkHealth}
@@ -50,6 +51,8 @@ export default function App() {
 {JSON.stringify(health, null, 2)}
         </pre>
       )}
+
+      <ToolPanel />
     </main>
   );
 }
