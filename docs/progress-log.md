@@ -52,3 +52,9 @@
 - 新增 `WorkspacePanel`，支持新增/激活 workspace。
 - 新增 workspace 本地持久化（最近 20 项）。
 - 激活 workspace 时联动调用 `fs_set_workspace_root`，并写入 run log。
+
+### Task Board（前端 v0）
+- 新增 `TaskBoard` 三列看板（todo/in_progress/done）。
+- 新增任务本地持久化与状态流转。
+- 任务按 active workspace 过滤展示。
+- 任务创建/状态更新动作写入 run log。

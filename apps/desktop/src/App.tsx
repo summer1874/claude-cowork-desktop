@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import RunLogPanel from './components/RunLogPanel';
+import TaskBoard from './components/TaskBoard';
 import ToolPanel from './components/ToolPanel';
 import WorkspacePanel from './components/WorkspacePanel';
 import { getAppHealth, type AppHealth } from './services/tauri';
@@ -55,6 +56,7 @@ export default function App() {
       )}
 
       <WorkspacePanel />
+      <TaskBoard />
       <ToolPanel />
       <RunLogPanel />
     </main>
