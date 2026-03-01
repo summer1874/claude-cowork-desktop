@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { appendRunLog } from '../logs/runlog';
+import { llmChat } from '../services/llm';
 import { useSessionStore } from '../sessions/store';
 import { addMessage, loadMessages, loadSessions, upsertSession } from '../sessions/storage';
 import type { MessageItem, SessionItem } from '../sessions/types';
@@ -24,6 +25,9 @@ export default function SessionPanel() {
   const [title, setTitle] = useState('');
   const [taskId, setTaskId] = useState('');
   const [model, setModel] = useState('openai_compatible');
+  const [baseUrl, setBaseUrl] = useState('');
+  const [modelName, setModelName] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [input, setInput] = useState('');
 
   useEffect(() => {
@@ -77,10 +81,11 @@ export default function SessionPanel() {
     );
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!activeSessionId) return;
     if (!input.trim()) return;
     const now = new Date().toISOString();
+    const t0 = Date.now();
 
     const userMsg: MessageItem = {
       id: `msg_${Date.now()}`,
@@ -90,30 +95,66 @@ export default function SessionPanel() {
       createdAt: now,
     };
 
-    const assistantMsg: MessageItem = {
-      id: `msg_${Date.now() + 1}`,
-      sessionId: activeSessionId,
-      role: 'assistant',
-      content: `（stub）已收到：${input.trim()}`,
-      createdAt: now,
-    };
-
     let next = addMessage(userMsg);
-    next = addMessage(assistantMsg);
     setMessages(next);
+    const prompt = input.trim();
     setInput('');
 
-    setRunLogs(
-      appendRunLog({
-        id: `log_${Date.now()}`,
-        at: now,
-        action: 'session_send_message',
-        input: { sessionId: activeSessionId, text: userMsg.content },
-        output: { ok: true },
-        status: 'ok',
-        durationMs: 1,
-      })
-    );
+    try {
+      const resp = await llmChat({
+        modelType: model,
+        prompt,
+        baseUrl,
+        modelName,
+        apiKey,
+      });
+
+      const assistantMsg: MessageItem = {
+        id: `msg_${Date.now() + 1}`,
+        sessionId: activeSessionId,
+        role: 'assistant',
+        content: resp.content,
+        createdAt: new Date().toISOString(),
+      };
+
+      next = addMessage(assistantMsg);
+      setMessages(next);
+
+      setRunLogs(
+        appendRunLog({
+          id: `log_${Date.now()}`,
+          at: new Date().toISOString(),
+          action: 'session_send_message',
+          input: { sessionId: activeSessionId, model, prompt: prompt.slice(0, 120) },
+          output: { provider: resp.provider },
+          status: 'ok',
+          durationMs: Date.now() - t0,
+        })
+      );
+    } catch (e) {
+      const errText = String(e);
+      const assistantMsg: MessageItem = {
+        id: `msg_${Date.now() + 1}`,
+        sessionId: activeSessionId,
+        role: 'assistant',
+        content: `调用失败：${errText}`,
+        createdAt: new Date().toISOString(),
+      };
+      next = addMessage(assistantMsg);
+      setMessages(next);
+
+      setRunLogs(
+        appendRunLog({
+          id: `log_${Date.now()}`,
+          at: new Date().toISOString(),
+          action: 'session_send_message',
+          input: { sessionId: activeSessionId, model, prompt: prompt.slice(0, 120) },
+          status: 'error',
+          error: errText,
+          durationMs: Date.now() - t0,
+        })
+      );
+    }
   };
 
   return (
@@ -139,6 +180,9 @@ export default function SessionPanel() {
           </select>
           <button onClick={createSession} disabled={!workspaceId}>新建会话</button>
         </div>
+        <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="Base URL（可选，默认按 provider）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
+        <input value={modelName} onChange={(e) => setModelName(e.target.value)} placeholder="Model（可选，如 gpt-4o-mini / qwen2.5:latest）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
+        <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="API Key（openai_compatible 时可填）" style={{ padding: 10, borderRadius: 8, border: '1px solid #475569' }} />
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>

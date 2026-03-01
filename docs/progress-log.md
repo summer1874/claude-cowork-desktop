@@ -64,3 +64,10 @@
 - 支持会话绑定任务与模型字段。
 - 消息持久化（localStorage）与 stub assistant 回复。
 - 会话创建/消息发送动作写入 run log。
+
+### Session 接入真实 LLM 通路（v0）
+- 新增 `apps/desktop/src/services/llm.ts`，调用 `llm_chat` command。
+- SessionPanel 从 stub 回复升级为真实 llm_chat 调用。
+- 支持在 UI 输入 base_url / model / api_key（本地调试用途）。
+- Rust 侧为 openai_compatible 与 ollama provider 增加 HTTP blocking 请求实现。
+- company_gateway 继续保留预留实现。
