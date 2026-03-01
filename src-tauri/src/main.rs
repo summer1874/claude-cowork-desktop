@@ -1,3 +1,4 @@
+mod tools;
 mod llm;
 mod commands;
 
@@ -13,7 +14,8 @@ fn main() {
   init_logging();
 
   tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![commands::app_health, commands::llm_test_connection, commands::llm_chat])
+    .manage(tools::state::ToolState::default())
+    .invoke_handler(tauri::generate_handler![commands::app_health, commands::llm_test_connection, commands::llm_chat, tools::fs::fs_set_workspace_root, tools::fs::fs_set_mode, tools::fs::fs_list, tools::fs::fs_read, tools::fs::fs_stat, tools::fs::fs_write])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

@@ -27,3 +27,13 @@
 - 新增 `docs/llm-integration-plan.md`，明确三类 Provider 接入策略。
 - 将 Company Gateway（公司后端）设为首期支持目标之一。
 - 更新 `api-contract.md` 与 `architecture.md` 的 LLM 接口与分层约束。
+
+### 工具层规划推进
+- 新增 `docs/tooling-plan.md`，定义模型文件操作能力与安全分级。
+- 文档补充 Tool Runtime Layer 与 File Tooling 接口约定。
+- 已落地 Tool Runtime v0：
+  - `fs_set_workspace_root`
+  - `fs_set_mode`（readonly/readwrite）
+  - `fs_list` / `fs_read` / `fs_stat`
+  - `fs_write`（仅 readwrite 模式允许）
+- 强制 workspace 边界校验，拒绝越界路径访问。

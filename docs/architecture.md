@@ -33,3 +33,10 @@
 - Rust 侧引入 Provider 抽象层，屏蔽不同模型厂商差异。
 - 首期支持：OpenAI-compatible / Ollama / Company Gateway。
 - 前端仅调用统一 command，不直接耦合第三方 API。
+
+
+## Tool Runtime Layer（新增）
+
+- 为模型提供受控工具命令（fs_list/fs_read/fs_write 等）。
+- 所有工具调用记录到 run logs，支持审计与回放。
+- 强制 workspace 边界与权限模式（readonly/readwrite）。

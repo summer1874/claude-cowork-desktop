@@ -42,3 +42,13 @@
 - `openai_compatible`
 - `ollama`
 - `company_gateway`
+
+
+## File Tooling 接口（新增）
+
+- `fs_set_workspace_root`
+- `fs_set_mode`（readonly/readwrite）
+- `fs_list`
+- `fs_read`
+- `fs_write`
+- `fs_stat`
