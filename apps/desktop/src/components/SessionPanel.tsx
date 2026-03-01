@@ -3,6 +3,7 @@ import { appendRunLog } from '../logs/runlog';
 import { llmChat } from '../services/llm';
 import { useSessionStore } from '../sessions/store';
 import { getSessionConfig, loadSessionConfigs, upsertSessionConfig } from '../sessions/config';
+import { loadGlobalSettings } from '../settings/storage';
 import { addMessage, loadMessages, loadSessions, upsertSession } from '../sessions/storage';
 import type { MessageItem, SessionItem } from '../sessions/types';
 import { useTaskStore } from '../tasks/store';
@@ -50,6 +51,15 @@ export default function SessionPanel() {
     setSessions(loadSessions());
     setMessages(loadMessages());
     loadSessionConfigs();
+
+    const gs = loadGlobalSettings();
+    setModel(gs.defaultModelType);
+    setBaseUrl(gs.defaultBaseUrl || '');
+    setModelName(gs.defaultModelName || '');
+    setApiKey(gs.defaultApiKey || '');
+    setPath(gs.companyPath || '/v1/chat/completions');
+    setAuthType(gs.companyAuthType || 'bearer');
+    setExtraHeadersText(gs.companyExtraHeadersText || '');
   }, [setSessions, setMessages]);
 
   useEffect(() => {

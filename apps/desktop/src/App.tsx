@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import RunLogPanel from './components/RunLogPanel';
 import SessionPanel from './components/SessionPanel';
+import SettingsPanel from './components/SettingsPanel';
 import TaskBoard from './components/TaskBoard';
 import ToolPanel from './components/ToolPanel';
 import WorkspacePanel from './components/WorkspacePanel';
@@ -56,6 +57,7 @@ export default function App() {
         </pre>
       )}
 
+      <SettingsPanel />
       <WorkspacePanel />
       <TaskBoard />
       <SessionPanel />

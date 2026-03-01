@@ -81,3 +81,8 @@
 - Session 面板新增按任务筛选会话（task filter）。
 - company_gateway 新增预留配置输入项：path/authType/extraHeadersText。
 - 会话级配置持久化扩展，保存上述预留字段。
+
+### 全局设置面板（Settings v0）
+- 新增 `SettingsPanel`，统一管理全局 LLM 默认配置。
+- 新增 settings store/storage（default model/baseUrl/modelName/apiKey）。
+- Session 面板初始化时可继承全局默认配置，减少重复录入。
